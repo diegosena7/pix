@@ -20,6 +20,24 @@ services:
     networks:
       - aw-network
 
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    networks:
+      - aw-network
+
+  rabbitmq:
+    image: rabbitmq:management
+    ports:
+      - "5672:5672"  # Porta para conexões AMQP
+      - "15672:15672" # Porta para o painel de administração
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - aw-network
+
 volumes:
   grafana-storage:
   prometheus-data:
