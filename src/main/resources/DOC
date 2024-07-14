@@ -1,0 +1,19 @@
+Redis: Usei a versão 3.3.1 e o client Jedis na versão 4.3.0
+O redis rodando via docker na porta 6379
+Comando docker: docker run --name redis-local -p 6379:6379 -d redis
+Usando o client (Jedis) na classe RedisConfig e gerencio o cache por 10 minutos na classe de serviço
+onde após a busca no bd ele insere no cache para as próximas buscas pelo período determinado
+
+RabbitMQ: Usei a versão 3.3.1 da amqp e na classe RabbitMQConfig está sendo configurada a criação
+da queue, a classe TransactionProducer envia para a fila o objeto de request, já a classe
+TransactionConsumer consome o valor e salva o objeto no banco de dados postgreSQL.
+A classe TransacaoService salva o objeto no banco mongoDB e envia para o producer postar na fila.
+
+O RabbitMQ está rodando via docker via comandos abaixo...
+docker pull rabbitmq:management
+docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:management
+
+Para acessar a interface de gerenciamento do RabbitMQ basta seguir as instruções abaixo...
+Abra um navegador e vá para http://localhost:15672. As credenciais padrão são:
+Username: guest
+Password: guest
