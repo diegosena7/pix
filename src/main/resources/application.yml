@@ -6,10 +6,10 @@ spring:
     name: pix project
   data:
     mongodb:
-      uri: mongodb://localhost:27017/transacoes
+      uri: mongodb://mongodb:27017/transacoes
       auto-index-creation: true
   datasource:
-    url: jdbc:mysql://localhost:3306/pix
+    url: jdbc:mysql://mysql:3306/pix
     username: root
     password: Santosfc@1912
   jpa:
@@ -17,12 +17,14 @@ spring:
       ddl-auto: update
       properties:
         hibernate:
+          dialect: org.hibernate.dialect.MySQL8Dialect
+          show_sql: true
           format_sql: true
   redis:
     host: redis
     port: 6379
   rabbitmq:
-    host: localhost
+    host: rabbitmq
     port: 5672
     username: guest
     password: guest
