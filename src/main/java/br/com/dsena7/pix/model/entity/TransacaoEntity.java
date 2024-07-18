@@ -49,7 +49,18 @@ public class TransacaoEntity {
     @Field("data_da_transacao")
     private LocalDateTime dataDaTrasacao = LocalDateTime.now();
 
+    @Builder.Default
+    @Field("transacao_processada")
+    private Boolean transacaoProcessada = Boolean.FALSE;
+
     // Getters e Setters
+    public Boolean getTransacaoProcessada() {
+        return transacaoProcessada;
+    }
+
+    public void setTransacaoProcessada(Boolean transacaoProcessada) {
+        this.transacaoProcessada = transacaoProcessada;
+    }
 
     public String getId() {
         return id;

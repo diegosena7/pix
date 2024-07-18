@@ -45,3 +45,15 @@ management:
       show-details: always
     metrics:
       enabled: true
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      rabbitmqCircuitBreaker:
+        registerHealthIndicator: true
+        slidingWindowSize: 100
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10000
+        permittedNumberOfCallsInHalfOpenState: 10
+        maxWaitDurationInHalfOpenState: 5000
+        automaticTransitionFromOpenToHalfOpenEnabled: true

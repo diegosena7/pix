@@ -17,3 +17,20 @@ Para acessar a interface de gerenciamento do RabbitMQ basta seguir as instruçõ
 Abra um navegador e vá para http://localhost:15672. As credenciais padrão são:
 Username: guest
 Password: guest
+
+Usado no método insereTransacao da classe de serviço o circuit breaker,ara monitorar possíveis
+falhas na chamada do método que manda msg pro tópico do rabbitmq chamado sendTransactionMessage
+O Circtui Breaker possui o seguinte funcionamento...
+Closed (Fechado): O Circuit Breaker permite chamadas e monitora falhas. Se muitas falhas ocorrerem,
+ele muda para o estado Open.
+
+Open (Aberto): O Circuit Breaker bloqueia todas as chamadas e retorna falhas rapidamente. Após um tempo,
+ele tenta verificar se o serviço está novamente disponível.
+
+Half-Open (Meio-Aberto): O Circuit Breaker permite algumas chamadas para testar se o serviço se recuperou.
+Se for bem-sucedido, ele volta a estar Fechado; se não, retorna para o estado Aberto.
+
+Usado Lock do tipo pessimista pensando no cenário onde o Lock é aplicado em caso de concorrência na tentativa
+de inserir uma transação no banco de dados, na classe de serviço usamos o LockModeType.PESSIMISTIC_WRITE no
+find com o entityManager para evitar conflitos com o método find da repository.
+

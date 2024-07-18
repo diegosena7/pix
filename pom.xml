@@ -101,12 +101,18 @@
             <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
 
-        <!-- Loki Logback Appender -->
-<!--        <dependency>-->
-<!--            <groupId>com.github.loki4j</groupId>-->
-<!--            <artifactId>loki-logback-appender</artifactId>-->
-<!--            <version>1.4.0</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-spring-boot2</artifactId>
+            <version>1.7.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-circuitbreaker</artifactId>
+            <version>1.7.1</version>
+        </dependency>
+
     </dependencies>
 
     <build>
