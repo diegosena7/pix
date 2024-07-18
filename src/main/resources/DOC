@@ -1,36 +1,37 @@
-Redis: Usei a versão 3.3.1 e o client Jedis na versão 4.3.0
-O redis rodando via docker na porta 6379
+- Redis: Usei a versão 3.3.1 e o client Jedis na versão 4.3.0
+* O redis rodando via docker na porta 6379
 Comando docker: docker run --name redis-local -p 6379:6379 -d redis
 Usando o client (Jedis) na classe RedisConfig e gerencio o cache por 10 minutos na classe de serviço
 onde após a busca no bd ele insere no cache para as próximas buscas pelo período determinado
 
-RabbitMQ: Usei a versão 3.3.1 da amqp e na classe RabbitMQConfig está sendo configurada a criação
+- RabbitMQ: Usei a versão 3.3.1 da amqp e na classe RabbitMQConfig está sendo configurada a criação
 da queue, a classe TransactionProducer envia para a fila o objeto de request, já a classe
 TransactionConsumer consome o valor e salva o objeto no banco de dados postgreSQL.
 A classe TransacaoService salva o objeto no banco mongoDB e envia para o producer postar na fila.
-
-O RabbitMQ está rodando via docker via comandos abaixo...
+* O RabbitMQ está rodando via docker via comandos abaixo...
 docker pull rabbitmq:management
 docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:management
-
-Para acessar a interface de gerenciamento do RabbitMQ basta seguir as instruções abaixo...
+* Para acessar a interface de gerenciamento do RabbitMQ basta seguir as instruções abaixo...
 Abra um navegador e vá para http://localhost:15672. As credenciais padrão são:
 Username: guest
 Password: guest
 
-Usado no método insereTransacao da classe de serviço o circuit breaker,ara monitorar possíveis
+- Circuit Breaker usado para manter a estabilidade e a resiliência do sistema ao gerenciando
+falhas e evitando que problemas em um serviço impactem negativamente outros serviços.
+* Usado no método insereTransacao da classe de serviço o circuit breaker,ara monitorar possíveis
 falhas na chamada do método que manda msg pro tópico do rabbitmq chamado sendTransactionMessage
 O Circtui Breaker possui o seguinte funcionamento...
-Closed (Fechado): O Circuit Breaker permite chamadas e monitora falhas. Se muitas falhas ocorrerem,
+* Closed (Fechado): O Circuit Breaker permite chamadas e monitora falhas. Se muitas falhas ocorrerem,
 ele muda para o estado Open.
-
-Open (Aberto): O Circuit Breaker bloqueia todas as chamadas e retorna falhas rapidamente. Após um tempo,
+* Open (Aberto): O Circuit Breaker bloqueia todas as chamadas e retorna falhas rapidamente. Após um tempo,
 ele tenta verificar se o serviço está novamente disponível.
-
-Half-Open (Meio-Aberto): O Circuit Breaker permite algumas chamadas para testar se o serviço se recuperou.
+* Half-Open (Meio-Aberto): O Circuit Breaker permite algumas chamadas para testar se o serviço se recuperou.
 Se for bem-sucedido, ele volta a estar Fechado; se não, retorna para o estado Aberto.
 
-Usado Lock do tipo pessimista pensando no cenário onde o Lock é aplicado em caso de concorrência na tentativa
+- LOCK: para garantir que as operações em um banco de dados ou sistema concorrente sejam realizadas de forma
+ordenada e sem conflitos, preservando a integridade e a consistência dos dados.
+* Usado Lock do tipo pessimista pensando no cenário onde o Lock é aplicado em caso de concorrência na tentativa
 de inserir uma transação no banco de dados, na classe de serviço usamos o LockModeType.PESSIMISTIC_WRITE no
 find com o entityManager para evitar conflitos com o método find da repository.
-
+Na entity usei @Version para uma possível mudança de estratégia de lock saindo de pessimistic para otimistic
+podendo ainda ser usado como camada adicional de controle de versão, mesmo com o lock pessimista.
