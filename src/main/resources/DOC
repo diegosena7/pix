@@ -29,7 +29,8 @@ ele tenta verificar se o serviço está novamente disponível.
 Se for bem-sucedido, ele volta a estar Fechado; se não, retorna para o estado Aberto.
 
 - LOCK: para garantir que as operações em um banco de dados ou sistema concorrente sejam realizadas de forma
-ordenada e sem conflitos, preservando a integridade e a consistência dos dados.
+ordenada e sem conflitos, preservando a integridade e a consistência dos dados verificando se uma transação com
+o mesmo id já existe.
 * Usado Lock do tipo pessimista pensando no cenário onde o Lock é aplicado em caso de concorrência na tentativa
 de inserir uma transação no banco de dados, na classe de serviço usamos o LockModeType.PESSIMISTIC_WRITE no
 find com o entityManager para evitar conflitos com o método find da repository.

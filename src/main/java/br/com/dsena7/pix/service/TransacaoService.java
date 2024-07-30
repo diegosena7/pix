@@ -54,27 +54,21 @@ public class TransacaoService {
         TransacaoEntity transacaoEntity = TransacoesMapper.toTransacaoEntity(pixRequesDTO);
 
         try {
-            // Usando o Lock Pessimista para garantir que não haja conflito de concorrência
-            TransacaoEntity existingTransacao = entityManager.find(TransacaoEntity.class, transacaoEntity.getIdDaTransacao(), LockModeType.PESSIMISTIC_WRITE);
+            // Verifica e bloqueia a transação existente
+            TransacaoEntity existingTransacao = checkAndLockTransacao(transacaoEntity);
 
             if (existingTransacao != null) {
-                // Verifica se a transação já foi processada para evitar reprocessamento
-                if (Boolean.TRUE.equals(existingTransacao.getTransacaoProcessada())) {
-                    throw new ExcecoesNegocios("A transação já foi processada.");
-                }
-                // Atualiza a transação existente com os novos dados
-                existingTransacao = TransacoesMapper.toTransacaoEntity(pixRequesDTO);
-                transacaoEntity = existingTransacao;
+                transacaoEntity = updateExistingTransacao(existingTransacao, pixRequesDTO);
             }
 
-            // Salva a nova ou atualizada transação
-            transacaoRepository.save(transacaoEntity);
+            // Salva a transação
+            saveTransacao(transacaoEntity);
 
             // Protege a chamada ao RabbitMQ com Circuit Breaker
-            CircuitBreaker.decorateRunnable(circuitBreaker, () -> transacaoProducer.sendTransactionMessage(pixRequesDTO)).run();
+            sendTransactionMessageWithCircuitBreaker(pixRequesDTO);
 
-            transacaoEntity.setTransacaoProcessada(Boolean.TRUE);
-            transacaoRepository.save(transacaoEntity);
+            // Marca a transação como processada e salva novamente
+            markTransacaoAsProcessed(transacaoEntity);
 
         } catch (OptimisticLockingFailureException exception) {
             throw new ExcecoesNegocios("Conflito de concorrência detectado: " + exception.getMessage());
@@ -82,6 +76,31 @@ public class TransacaoService {
             log.error("Erro ao processar a transação: ", e);
             throw new ExcecoesNegocios("Erro ao processar a transação: " + e.getMessage());
         }
+    }
+
+    private TransacaoEntity checkAndLockTransacao(TransacaoEntity transacaoEntity) {
+        return entityManager.find(TransacaoEntity.class, transacaoEntity.getIdDaTransacao(), LockModeType.PESSIMISTIC_WRITE);
+    }
+
+    private TransacaoEntity updateExistingTransacao(TransacaoEntity existingTransacao, PixRequesDTO pixRequesDTO) throws ExcecoesNegocios {
+        if (Boolean.TRUE.equals(existingTransacao.getTransacaoProcessada())) {
+            throw new ExcecoesNegocios("A transação já foi processada.");
+        }
+        existingTransacao = TransacoesMapper.toTransacaoEntity(pixRequesDTO);
+        return existingTransacao;
+    }
+
+    private void saveTransacao(TransacaoEntity transacaoEntity) {
+        transacaoRepository.save(transacaoEntity);
+    }
+
+    private void sendTransactionMessageWithCircuitBreaker(PixRequesDTO pixRequesDTO) {
+        CircuitBreaker.decorateRunnable(circuitBreaker, () -> transacaoProducer.sendTransactionMessage(pixRequesDTO)).run();
+    }
+
+    private void markTransacaoAsProcessed(TransacaoEntity transacaoEntity) {
+        transacaoEntity.setTransacaoProcessada(Boolean.TRUE);
+        transacaoRepository.save(transacaoEntity);
     }
 
     public List<PixResponseDTO> buscaTransacoesPorCpf(String cpf) throws ExcecoesNegocios {
