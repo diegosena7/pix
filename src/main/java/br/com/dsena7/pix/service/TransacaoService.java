@@ -55,11 +55,11 @@ public class TransacaoService {
 
         try {
             // Verifica e bloqueia a transação existente
-            TransacaoEntity existingTransacao = checkAndLockTransacao(transacaoEntity);
+//            TransacaoEntity existingTransacao = checkAndLockTransacao(transacaoEntity);
 
-            if (existingTransacao != null) {
-                transacaoEntity = updateExistingTransacao(existingTransacao, pixRequesDTO);
-            }
+//            if (existingTransacao != null) {
+//                transacaoEntity = updateExistingTransacao(existingTransacao, pixRequesDTO);
+//            }
 
             // Salva a transação
             saveTransacao(transacaoEntity);

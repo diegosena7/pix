@@ -38,9 +38,32 @@ services:
     networks:
       - aw-network
 
+  mysql:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: Santosfc@1912
+      MYSQL_DATABASE: pix
+    ports:
+      - "3306:3306"
+    networks:
+      - aw-network
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    networks:
+      - aw-network
+    volumes:
+      - mongodb-data:/data/db
+
 volumes:
   grafana-storage:
   prometheus-data:
+  mysql-data:
+  mongodb-data:
 
 networks:
   aw-network:
