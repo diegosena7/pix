@@ -10,7 +10,6 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.LockModeType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -80,8 +79,13 @@ public class TransacaoService {
 
     private TransacaoEntity checkAndLockTransacao(TransacaoEntity transacaoEntity) throws ExcecoesNegocios {
         TransacaoEntity existingTransacao = transacaoRepository.findByIdDaTransacao(transacaoEntity.getIdDaTransacao());
-        if (existingTransacao != null && Boolean.TRUE.equals(existingTransacao.getTransacaoProcessada())) {
-            throw new ExcecoesNegocios("A transação já foi processada.");
+        if (existingTransacao != null) {
+            if (Boolean.TRUE.equals(existingTransacao.getTransacaoProcessada())) {
+                throw new ExcecoesNegocios("A transação já está em processamento.");
+            }
+            // Marcar como bloqueado
+            existingTransacao.setTransacaoProcessada(true);
+            transacaoRepository.save(existingTransacao);
         }
         return existingTransacao;
     }
