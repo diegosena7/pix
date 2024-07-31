@@ -55,11 +55,11 @@ public class TransacaoService {
 
         try {
             // Verifica e bloqueia a transação existente
-//            TransacaoEntity existingTransacao = checkAndLockTransacao(transacaoEntity);
+            TransacaoEntity existingTransacao = checkAndLockTransacao(transacaoEntity);
 
-//            if (existingTransacao != null) {
-//                transacaoEntity = updateExistingTransacao(existingTransacao, pixRequesDTO);
-//            }
+            if (existingTransacao != null) {
+                transacaoEntity = updateExistingTransacao(existingTransacao, pixRequesDTO);
+            }
 
             // Salva a transação
             saveTransacao(transacaoEntity);
@@ -78,8 +78,12 @@ public class TransacaoService {
         }
     }
 
-    private TransacaoEntity checkAndLockTransacao(TransacaoEntity transacaoEntity) {
-        return entityManager.find(TransacaoEntity.class, transacaoEntity.getIdDaTransacao(), LockModeType.PESSIMISTIC_WRITE);
+    private TransacaoEntity checkAndLockTransacao(TransacaoEntity transacaoEntity) throws ExcecoesNegocios {
+        TransacaoEntity existingTransacao = transacaoRepository.findByIdDaTransacao(transacaoEntity.getIdDaTransacao());
+        if (existingTransacao != null && Boolean.TRUE.equals(existingTransacao.getTransacaoProcessada())) {
+            throw new ExcecoesNegocios("A transação já foi processada.");
+        }
+        return existingTransacao;
     }
 
     private TransacaoEntity updateExistingTransacao(TransacaoEntity existingTransacao, PixRequesDTO pixRequesDTO) throws ExcecoesNegocios {
