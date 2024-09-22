@@ -46,6 +46,11 @@ management:
     metrics:
       enabled: true
 
+api:
+  security:
+    token:
+      secret: ${JWT_SECRET:my-secret-key}
+
 resilience4j:
   circuitbreaker:
     instances:

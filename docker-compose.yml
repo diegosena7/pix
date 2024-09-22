@@ -44,7 +44,7 @@ services:
       MYSQL_ROOT_PASSWORD: Santosfc@1912
       MYSQL_DATABASE: pix
     ports:
-      - "3306:3306"
+      - "3307:3307"
     networks:
       - aw-network
     volumes:
