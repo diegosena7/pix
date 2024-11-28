@@ -6,6 +6,7 @@ import br.com.dsena7.pix.model.dto.PixResponseDTO;
 import br.com.dsena7.pix.model.entity.TransacaoEntity;
 import br.com.dsena7.pix.model.mapper.TransacoesMapper;
 import br.com.dsena7.pix.repository.TransacaoRepository;
+import br.com.dsena7.pix.utils.TransactionUtils;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import jakarta.annotation.PostConstruct;
@@ -19,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import static br.com.dsena7.pix.utils.TransactionUtils.*;
 
 @Service
 @Slf4j
@@ -54,20 +57,20 @@ public class TransacaoService {
 
         try {
             // Verifica e bloqueia a transação existente
-            TransacaoEntity existingTransacao = checkAndLockTransacao(transacaoEntity);
+            TransacaoEntity existingTransacao = TransactionUtils.checkAndLockTransaction(transacaoEntity, transacaoRepository);
 
             if (existingTransacao != null) {
-                transacaoEntity = updateExistingTransacao(existingTransacao, pixRequesDTO);
+                transacaoEntity = TransactionUtils.updateExistingTransacao(existingTransacao, pixRequesDTO);
             }
 
             // Salva a transação
-            saveTransacao(transacaoEntity);
+            saveTransacao(transacaoEntity, transacaoRepository);
 
             // Protege a chamada ao RabbitMQ com Circuit Breaker
-            sendTransactionMessageWithCircuitBreaker(pixRequesDTO);
+            sendTransactionMessageWithCircuitBreaker(pixRequesDTO, circuitBreaker,transacaoProducer);
 
             // Marca a transação como processada e salva novamente
-            markTransacaoAsProcessed(transacaoEntity);
+            markTransactionAsProcessed(transacaoEntity, transacaoRepository);
 
         } catch (OptimisticLockingFailureException exception) {
             throw new ExcecoesNegocios("Conflito de concorrência detectado: " + exception.getMessage());
@@ -77,39 +80,6 @@ public class TransacaoService {
         }
     }
 
-    private TransacaoEntity checkAndLockTransacao(TransacaoEntity transacaoEntity) throws ExcecoesNegocios {
-        TransacaoEntity existingTransacao = transacaoRepository.findByIdDaTransacao(transacaoEntity.getIdDaTransacao());
-        if (existingTransacao != null) {
-            if (Boolean.TRUE.equals(existingTransacao.getTransacaoProcessada())) {
-                throw new ExcecoesNegocios("A transação já está em processamento.");
-            }
-            // Marcar como bloqueado
-            existingTransacao.setTransacaoProcessada(true);
-            transacaoRepository.save(existingTransacao);
-        }
-        return existingTransacao;
-    }
-
-    private TransacaoEntity updateExistingTransacao(TransacaoEntity existingTransacao, PixRequesDTO pixRequesDTO) throws ExcecoesNegocios {
-        if (Boolean.TRUE.equals(existingTransacao.getTransacaoProcessada())) {
-            throw new ExcecoesNegocios("A transação já foi processada.");
-        }
-        existingTransacao = TransacoesMapper.toTransacaoEntity(pixRequesDTO);
-        return existingTransacao;
-    }
-
-    private void saveTransacao(TransacaoEntity transacaoEntity) {
-        transacaoRepository.save(transacaoEntity);
-    }
-
-    private void sendTransactionMessageWithCircuitBreaker(PixRequesDTO pixRequesDTO) {
-        CircuitBreaker.decorateRunnable(circuitBreaker, () -> transacaoProducer.sendTransactionMessage(pixRequesDTO)).run();
-    }
-
-    private void markTransacaoAsProcessed(TransacaoEntity transacaoEntity) {
-        transacaoEntity.setTransacaoProcessada(Boolean.TRUE);
-        transacaoRepository.save(transacaoEntity);
-    }
 
     public List<PixResponseDTO> buscaTransacoesPorCpf(String cpf) throws ExcecoesNegocios {
         List<TransacaoEntity> transacoes = transacaoRepository.findByCpfCliente(cpf);
@@ -139,4 +109,5 @@ public class TransacaoService {
 
         return transacaoDto;
     }
+
 }

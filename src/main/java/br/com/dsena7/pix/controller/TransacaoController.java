@@ -27,7 +27,7 @@ public class TransacaoController {
     }
 
     @GetMapping("/pix/cpf/{cpf}")
-    public ResponseEntity<?> buscaTransacoesPorCpf(@PathVariable String cpf) {
+    public ResponseEntity<Object> buscaTransacoesPorCpf(@PathVariable String cpf) {
         try {
             List<PixResponseDTO> transacoes = transacaoService.buscaTransacoesPorCpf(cpf);
             return ResponseEntity.ok(transacoes);
@@ -38,7 +38,7 @@ public class TransacaoController {
     }
 
     @GetMapping("/pix/id/{idDTransacao}")
-    public ResponseEntity<?> buscarTransacaoPorIdDaTransacao(@PathVariable String idDTransacao){
+    public ResponseEntity<Object> buscarTransacaoPorIdDaTransacao(@PathVariable String idDTransacao){
         try {
             PixResponseDTO transacao = transacaoService.buscarTransacaoPorIdDaTransacao(idDTransacao);
             return ResponseEntity.ok(transacao);
